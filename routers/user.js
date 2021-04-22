@@ -4,7 +4,11 @@ const {
     createUser,
     deleteUser,
     loginUser,
+    findUserById,
 } = require('../controllers/UsersController');
+
+//Find user by id
+router.get('/userProfile/:id', findUserById);
 
 //Create user
 router.post('/signup', createUser);
