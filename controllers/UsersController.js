@@ -1,6 +1,8 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const { secret } = require('../config/config');
 
 class UserController {
     static async createUser(req, res) {
@@ -22,6 +24,33 @@ class UserController {
                 return res.status(500).send('The user can not be created');
             res.send(user);
         }
+    }
+
+    static async loginUser(req, res) {
+        const user = await User.findOne({ email: req.body.email });
+
+        if (!user) {
+            return res.status(400).send('User not found');
+        }
+
+        if (user && bcrypt.compareSync(req.body.password, user.password)) {
+            const token = jwt.sign(
+                {
+                    userId: user.id,
+                },
+                secret,
+                { expiresIn: '1d' }
+            );
+
+            return res.status(200).send({ user: user.email, token: token });
+        } else {
+            res.status(400).send({
+                success: true,
+                message: 'Incorrect password',
+            });
+        }
+
+        return res.status(200).send(user);
     }
 
     static deleteUser(req, res) {

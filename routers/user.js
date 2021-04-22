@@ -9,6 +9,9 @@ const {
 //Create user
 router.post('/signup', createUser);
 
+//Login user
+router.post('/login', loginUser);
+
 //Delete user
 router.delete('/:id', deleteUser);
 
