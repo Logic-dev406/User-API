@@ -22,6 +22,26 @@ class UserController {
         res.status(200).send(user);
     }
 
+    static async updateUserById(req, res) {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            res.status(400).send('Invalid User id');
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            {
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                email: req.body.email,
+            },
+            { new: true }
+        ).select('-password');
+
+        if (!user) return res.status(500).send('The user can not be updated');
+
+        res.send(user);
+    }
+
     static async createUser(req, res) {
         const userExist = await User.findOne({ email: req.body.email });
 
@@ -56,7 +76,7 @@ class UserController {
                     userId: user.id,
                 },
                 secret,
-                { expiresIn: '1d' }
+                { expiresIn: '1h' }
             );
 
             return res.status(200).send({ user: user.email, token: token });

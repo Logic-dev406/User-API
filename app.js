@@ -3,6 +3,8 @@ const app = express();
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const cors = require('cors');
+const authJwt = require('./helpers/jwt');
+const errorHandler = require('./helpers/error-handler');
 require('./db/mongoose');
 
 const userRouter = require('./routers/user');
@@ -12,6 +14,8 @@ app.use(cors());
 app.options('*', cors());
 app.use(bodyParser.json());
 app.use(morgan('tiny'));
+app.use(authJwt());
+app.use(errorHandler);
 app.use('/api', userRouter);
 
 //port
