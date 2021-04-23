@@ -6,7 +6,11 @@ const {
     loginUser,
     findUserById,
     updateUserById,
+    getListOfAllUsers,
 } = require('../controllers/UsersController');
+
+//Get list of all users
+router.get('/', getListOfAllUsers);
 
 //Find user by id
 router.get('/userProfile/:id', findUserById);

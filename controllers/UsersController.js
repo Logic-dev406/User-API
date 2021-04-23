@@ -5,6 +5,20 @@ const jwt = require('jsonwebtoken');
 const { secret } = require('../config/config');
 
 class UserController {
+    static async getListOfAllUsers(req, res) {
+        try {
+            const userList = await User.find().select('-password');
+
+            if (!userList) {
+                res.status(500), json({ success: false });
+            }
+
+            res.send(userList);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     static async findUserById(req, res) {
         try {
             if (!mongoose.isValidObjectId(req.params.id)) {
