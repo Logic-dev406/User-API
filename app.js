@@ -22,7 +22,7 @@ app.use('/api', userRouter);
 const port = process.env.PORT || 3030;
 
 app.get('/', (req, res) => {
-    res.send('WELCOM ');
+    res.send('WELCOM TO USER API');
 });
 
 app.listen(port, () => {
