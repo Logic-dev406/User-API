@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const { secret } = require('../config/config');
+const response = require('../helpers/response');
 
 class UserController {
     static async getListOfAllUsers(req, res) {
@@ -10,47 +11,42 @@ class UserController {
             const userList = await User.find().select('-password');
 
             if (!userList) {
-                res.status(500), json({ success: false });
+                res.status(500).send(response('No user find', {}, false));
             }
 
-            res.send(userList);
+            return res
+                .status(200)
+                .send(response('Fetchted users successfully', userList));
         } catch (error) {
-            console.log(error);
+            return res.status(400).send(response(error.message, {}, false));
+            console.log(response(error.message, {}, false));
         }
     }
 
     static async findUserById(req, res) {
         try {
             if (!mongoose.isValidObjectId(req.params.id)) {
-                res.status(400).send('Invalid User id');
+                res.status(400).send(response('Invalid User id', {}, false));
             }
 
             const user = await User.findById(req.params.id).select('-password');
 
             if (!user) {
-                return res.status(500).json({
-                    success: false,
-                    message: 'User not found',
-                });
+                return res
+                    .status(500)
+                    .send(response('User not found', {}, false));
             }
 
-            res.status(200).send(user);
+            res.status(200).send(response('Fetched user successful', user));
         } catch (error) {
-            console.log(error);
+            res.send(response(error.message, {}, false));
+            console.log(response(error.message, {}, false));
         }
     }
 
     static async updateUserById(req, res) {
         if (!mongoose.isValidObjectId(req.params.id)) {
-            res.status(400).send('Invalid User id');
-        }
-
-        const userExist = await User.findOne({ email: req.body.email });
-
-        if (userExist) {
-            return res
-                .status(400)
-                .json({ success: false, message: 'Email already exist' });
+            res.status(400).send(response('Invalid User id', {}, false));
         }
 
         const user = await User.findByIdAndUpdate(
@@ -63,9 +59,12 @@ class UserController {
             { new: true }
         ).select('-password');
 
-        if (!user) return res.status(500).send('The user can not be updated');
+        if (!user)
+            return res
+                .status(500)
+                .send(response('The user can not be updated', {}, false));
 
-        res.send(user);
+        res.send(response('Updated user successfully', user));
     }
 
     static async createUser(req, res) {
@@ -75,7 +74,7 @@ class UserController {
             if (userExist) {
                 return res
                     .status(400)
-                    .json({ success: false, message: 'Email already exist' });
+                    .send(response('Email already exist', {}, false));
             }
 
             let user = new User({
@@ -86,11 +85,13 @@ class UserController {
             });
             user = await user.save();
             if (!user)
-                return res.status(500).send('The user can not be created');
-            res.send(user);
+                return res
+                    .status(500)
+                    .send(response('The user can not be created', {}, false));
+            res.send(response('Created user successfully', user));
         } catch (error) {
-            res.send({ success: false, message: error.message });
-            console.log(error);
+            res.send(response(error.message, {}, false));
+            console.log(response(error.message, {}, false));
         }
     }
 
@@ -99,7 +100,9 @@ class UserController {
             const user = await User.findOne({ email: req.body.email });
 
             if (!user) {
-                return res.status(400).send('User not found');
+                return res
+                    .status(400)
+                    .send(response('User not found', {}, false));
             }
 
             if (user && bcrypt.compareSync(req.body.password, user.password)) {
@@ -108,48 +111,52 @@ class UserController {
                         userId: user.id,
                     },
                     secret,
-                    { expiresIn: '1h' }
+                    { expiresIn: '5h' }
                 );
 
-                return res.status(200).send({ user: user.email, token: token });
+                return res.status(200).send(
+                    response('Login successful', {
+                        user: user.email,
+                        token: token,
+                    })
+                );
             } else {
-                res.status(400).send({
-                    success: true,
-                    message: 'Incorrect password',
-                });
+                res.status(400).send(response('Incorrect password', {}, false));
             }
 
-            return res.status(200).send(user);
+            return res.status(200).send(response(user));
         } catch (error) {
-            console.log(error);
+            res.send(response(error.message, {}, false));
+            console.log(response(error.message, {}, false));
         }
     }
 
     static deleteUser(req, res) {
         try {
             if (!mongoose.isValidObjectId(req.params.id)) {
-                res.status(400).send('Invalid User id');
+                res.status(400).send(response('Invalid User id', {}, false));
             }
 
             User.findByIdAndDelete(req.params.id)
                 .then((user) => {
                     if (user) {
-                        return res.status(200).json({
-                            success: true,
-                            message: 'User deleted',
-                        });
+                        return res
+                            .status(200)
+                            .send(response('User deleted', {}));
                     } else {
-                        return res.status(404).json({
-                            success: false,
-                            message: 'User not found',
-                        });
+                        return res
+                            .status(404)
+                            .send(response('User not found', {}, false));
                     }
                 })
-                .catch((e) => {
-                    return res.status(400).send({ success: false, error: e });
+                .catch((error) => {
+                    return res
+                        .status(400)
+                        .send(response(error.message, {}, false));
                 });
         } catch (error) {
-            console.log(error);
+            res.send(response(error.message, {}, false));
+            console.log(response(error.message, {}, false));
         }
     }
 }
